@@ -294,8 +294,7 @@ def fetch_line_stations(route_id: str) -> LineStationsResponse:
 def fetch_station_detail(station_id: str) -> StationDetailResponse:
     station_query = """
         WITH station_nodes AS (
-            SELECT stop_id, stop_name, parent_station
-            FROM stops
+            SELECT stop_id, stop_name, parent_station, latitude, longitude\n            FROM stops
             WHERE stop_id = %(station_id)s OR parent_station = %(station_id)s
         )
         SELECT
@@ -504,3 +503,4 @@ def _normalize_crowd(level: str | None) -> str:
     if level in {"low", "medium", "high"}:
         return level
     return "medium"
+
