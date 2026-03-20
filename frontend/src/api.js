@@ -27,6 +27,54 @@ function formatRelativeMinutes(value) {
   return `${value} min`;
 }
 
+function formatTimestamp(value) {
+  if (!value) return 'Unavailable';
+  const timestamp = new Date(value);
+  if (Number.isNaN(timestamp.getTime())) {
+    return value;
+  }
+  return timestamp.toLocaleString('en-CA', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+}
+
+function formatOverviewCards(cards) {
+  return cards.map((card) => {
+    if (card.label !== 'Feed Freshness') {
+      return card;
+    }
+    return {
+      ...card,
+      value: formatTimestamp(card.value),
+    };
+  });
+}
+
+function normalizeAlert(alert) {
+  if (!alert) {
+    return {
+      title: null,
+      message: 'No TTC service alerts are currently stored in the system.',
+      severity: 'info',
+    };
+  }
+
+  const title = alert.title?.trim();
+  const message = alert.message?.trim() ?? '';
+  const hideTitle = !title || message.toLowerCase().startsWith(title.toLowerCase());
+
+  return {
+    ...alert,
+    title: hideTitle ? null : title,
+    message,
+  };
+}
+
 export async function loadDashboardData(location = DEFAULT_LOCATION) {
   const [overview, alerts, demand, nearbyStops, routeStatuses] = await Promise.all([
     fetchJson('/overview'),
@@ -53,12 +101,8 @@ export async function loadDashboardData(location = DEFAULT_LOCATION) {
 
   return {
     lastUpdated: new Date().toISOString(),
-    alert: alerts.alerts[0] ?? {
-      title: 'No active alerts',
-      message: 'No TTC service alerts are currently stored in the system.',
-      severity: 'info',
-    },
-    overviewCards: overview.cards,
+    alert: normalizeAlert(alerts.alerts[0]),
+    overviewCards: formatOverviewCards(overview.cards),
     lines: routeStatuses.map(({ route }) => ({
       id: route.route_id,
       name: route.route_name,
