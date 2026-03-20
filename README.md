@@ -8,7 +8,9 @@ Distributed public transit system for TTC live monitoring, subway schedule refer
 - `backend/`: FastAPI REST API
 - `worker/`: TTC ingestion and schedule-generation jobs
 - `infra/`: SQL schema and optional local runtime helpers
-- `render.yaml`: Render blueprint for backend, worker, and static refresh job
+- `render.yaml`: Render blueprint for the backend web service
+- `.github/workflows/ttc-live-worker.yml`: scheduled live TTC ingest job
+- `.github/workflows/ttc-static-refresh.yml`: scheduled static GTFS refresh job
 
 ## Architecture
 
@@ -17,6 +19,8 @@ Distributed public transit system for TTC live monitoring, subway schedule refer
 - Subway arrivals are exposed as `scheduled estimate`, not live prediction.
 - Passenger demand and crowding are simulated in backend processing.
 - Backend and worker both connect directly to Supabase Postgres through one `DATABASE_URL`.
+- Render hosts the backend API.
+- GitHub Actions runs scheduled worker jobs for TTC data refresh.
 
 ## Environment Files
 
@@ -59,7 +63,7 @@ Run both schema files in Supabase SQL Editor:
 6. Refresh live data once:
    - `cd worker`
    - `& ..\.venv\Scripts\python.exe -m app.main live`
-7. Run continuous live ingestion locally:
+7. Run continuous live ingestion locally if needed:
    - `cd worker`
    - `& ..\.venv\Scripts\python.exe -m app.main daemon`
 8. Refresh static GTFS and subway schedule estimates:
@@ -82,20 +86,46 @@ Deployment flow:
 
 ## Render Deployment
 
-The repo includes `render.yaml` with three services:
+`render.yaml` defines one Render service:
 
 - `ttc-transit-backend`: FastAPI web service
-- `ttc-transit-worker`: continuous GTFS-RT ingestion worker
-- `ttc-transit-static-refresh`: daily static GTFS refresh cron job
 
 Deployment flow:
 
 1. Push the repository to GitHub.
 2. In Render, create a new Blueprint and point it to the repository.
-3. Render will detect `render.yaml` and create the three services.
-4. Set `DATABASE_URL` in Render for all three services to the Supabase session-pooler connection string.
-5. Deploy the backend and worker services.
-6. After the backend URL is live, set `frontend/.env` to that URL and redeploy Firebase.
+3. Use branch `codex/deployment-new` or your chosen deployment branch.
+4. Render will detect `render.yaml` and create the backend service.
+5. Set `DATABASE_URL` in Render to the Supabase session-pooler connection string.
+6. Deploy the backend service.
+7. Verify:
+   - `https://your-backend-service.onrender.com/api/health`
+   - `https://your-backend-service.onrender.com/api/overview`
+
+## GitHub Actions Worker Deployment
+
+Two GitHub Actions workflows replace the paid Render worker/cron services:
+
+- `ttc-live-worker.yml`: runs every 5 minutes for live TTC ingest
+- `ttc-static-refresh.yml`: runs daily for static GTFS refresh
+
+Required GitHub repository secret:
+
+- `DATABASE_URL`: Supabase session-pooler Postgres connection string
+
+GitHub setup flow:
+
+1. Open your GitHub repository.
+2. Go to `Settings -> Secrets and variables -> Actions`.
+3. Add a new repository secret named `DATABASE_URL`.
+4. Push the branch containing these workflow files.
+5. Open the `Actions` tab and confirm both workflows are visible.
+6. Run both workflows once manually with `Run workflow`.
+7. Check that Supabase tables update and backend endpoints return fresh data.
+
+Operational note:
+
+- GitHub Actions is scheduled, not continuous. Live TTC ingestion updates every 5 minutes, not every 30 seconds.
 
 ## Current Status
 
