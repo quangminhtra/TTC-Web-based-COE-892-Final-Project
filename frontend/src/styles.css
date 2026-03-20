@@ -520,3 +520,105 @@ th {
   }
 }
 
+
+.schematic-panel {
+  overflow: hidden;
+}
+
+.schematic-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.5rem;
+}
+
+.line-one-scroll {
+  overflow-x: auto;
+}
+
+.svg-schematic {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 720px;
+}
+
+.horizontal-schematic {
+  min-width: 920px;
+}
+
+.svg-line-title {
+  fill: var(--text);
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.svg-line-subtitle {
+  fill: var(--muted);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.svg-station {
+  outline: none;
+}
+
+.svg-station.is-clickable {
+  cursor: pointer;
+}
+
+.svg-station.is-disabled {
+  cursor: default;
+}
+
+.svg-station:focus-visible circle {
+  stroke: #ffffff;
+  stroke-width: 6px;
+}
+
+.svg-station-name {
+  fill: var(--text);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.svg-station-name.left,
+.svg-station-name.right {
+  dominant-baseline: middle;
+}
+
+.svg-station-name.center {
+  text-anchor: middle;
+}
+
+.svg-station-name.horizontal {
+  font-size: 0.88rem;
+}
+
+.svg-station-name.terminal {
+  font-size: 1.02rem;
+  font-weight: 800;
+}
+
+.svg-interchange-badge {
+  fill: rgba(9, 13, 18, 0.95);
+  stroke: #ffffff;
+  stroke-width: 1.5px;
+}
+
+.svg-interchange-text {
+  fill: #ffffff;
+  font-size: 0.48rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 768px) {
+  .svg-schematic {
+    min-width: 760px;
+  }
+
+  .horizontal-schematic {
+    min-width: 980px;
+  }
+}
