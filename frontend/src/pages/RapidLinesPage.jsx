@@ -37,22 +37,30 @@ function enrichStations(layoutStations, apiStations) {
   });
 }
 
-function splitLineOneStations(stations) {
-  const unionIndex = stations.findIndex((station) => station.label === 'Union');
-  if (unionIndex <= 0) {
-    return [stations];
+function splitStationsForLayout(routeId, stations) {
+  if (routeId === '1') {
+    const unionIndex = stations.findIndex((station) => station.label === 'Union');
+    if (unionIndex > 0) {
+      return [stations.slice(0, unionIndex + 1), stations.slice(unionIndex).reverse()];
+    }
   }
-  return [stations.slice(0, unionIndex + 1), stations.slice(unionIndex).reverse()];
+
+  if (routeId === '2' || routeId === '5') {
+    const midpoint = Math.ceil(stations.length / 2);
+    return [stations.slice(0, midpoint), stations.slice(midpoint)];
+  }
+
+  return [stations];
 }
 
 function formatStationDisplay(name) {
   return name.replace(/\s+-\s+/g, ' - ');
 }
 
-function VerticalLineColumn({ routeId, routeName, colorClass, stations, reverseRail = false }) {
+function VerticalLineColumn({ routeId, routeName, colorClass, stations }) {
   return (
     <div className="vertical-line-column">
-      <div className={`vertical-line-rail ${colorClass} ${reverseRail ? 'reverse' : ''}`} aria-hidden="true" />
+      <div className={`vertical-line-rail ${colorClass}`} aria-hidden="true" />
       <div className="vertical-line-stations">
         {stations.map((station, index) => {
           const isTerminal = index === 0 || index === stations.length - 1;
@@ -81,43 +89,6 @@ function VerticalLineColumn({ routeId, routeName, colorClass, stations, reverseR
         })}
       </div>
       <div className="vertical-line-caption">{routeName}</div>
-    </div>
-  );
-}
-
-function HorizontalStationStrip({ routeId, routeName, colorClass, stations }) {
-  return (
-    <div className="horizontal-strip-panel">
-      <div className="horizontal-strip-header">
-        <h3>{routeName}</h3>
-        <p className="muted">Curated station order with accessible click targets.</p>
-      </div>
-      <div className="horizontal-strip-scroll">
-        <div className={`horizontal-strip-rail ${colorClass}`} aria-hidden="true" />
-        <div className="horizontal-strip-stations">
-          {stations.map((station, index) => {
-            const isTerminal = index === 0 || index === stations.length - 1;
-            const isInterchange = station.interchanges.length > 0;
-            const content = (
-              <>
-                <span className={`horizontal-strip-node ${colorClass} ${isTerminal ? 'terminal' : ''} ${isInterchange ? 'interchange' : ''}`} aria-hidden="true" />
-                <span className={`horizontal-strip-name ${isTerminal ? 'terminal' : ''}`}>{formatStationDisplay(station.displayName)}</span>
-                {isInterchange ? <span className="horizontal-strip-meta">{station.interchanges.join(' / ')}</span> : null}
-              </>
-            );
-
-            return station.id ? (
-              <Link key={`${routeId}-${station.label}`} className="horizontal-strip-stop" to={`/stations/${station.id}`}>
-                {content}
-              </Link>
-            ) : (
-              <div key={`${routeId}-${station.label}`} className="horizontal-strip-stop is-disabled">
-                {content}
-              </div>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }
@@ -152,7 +123,8 @@ export default function RapidLinesPage() {
   const displayLine = lines.find((line) => line.id === routeId);
   const lineName = displayLine?.name ?? layout.routeName;
   const lineColorClass = displayLine?.colorClass ?? lineData.colorClass;
-  const lineOneColumns = useMemo(() => splitLineOneStations(curatedStations), [curatedStations]);
+  const stationColumns = useMemo(() => splitStationsForLayout(routeId, curatedStations), [routeId, curatedStations]);
+  const gridClass = stationColumns.length > 1 ? 'two-column-line-grid' : 'single-column-line-grid';
 
   return (
     <div className="app-shell">
@@ -181,43 +153,21 @@ export default function RapidLinesPage() {
           <div className="panel-heading">
             <div>
               <h2>{lineName}</h2>
-              <p className="muted">Vertical-first line layout for cleaner accessibility and predictable responsiveness.</p>
+              <p className="muted">Accessible vertical layout with curated station order.</p>
             </div>
           </div>
 
-          {routeId === '1' ? (
-            <div className="vertical-line-grid two-column-line-grid">
+          <div className={`vertical-line-grid ${gridClass}`}>
+            {stationColumns.map((column, index) => (
               <VerticalLineColumn
+                key={`${routeId}-${index}`}
                 routeId={routeId}
-                routeName="Vaughan to Union"
+                routeName={stationColumns.length > 1 ? `${lineName} ${index + 1}` : lineName}
                 colorClass={lineColorClass}
-                stations={lineOneColumns[0]}
+                stations={column}
               />
-              <VerticalLineColumn
-                routeId={routeId}
-                routeName="Finch to Union"
-                colorClass={lineColorClass}
-                stations={lineOneColumns[1]}
-                reverseRail
-              />
-            </div>
-          ) : routeId === '4' ? (
-            <div className="vertical-line-grid single-column-line-grid">
-              <VerticalLineColumn
-                routeId={routeId}
-                routeName={lineName}
-                colorClass={lineColorClass}
-                stations={curatedStations}
-              />
-            </div>
-          ) : (
-            <HorizontalStationStrip
-              routeId={routeId}
-              routeName={lineName}
-              colorClass={lineColorClass}
-              stations={curatedStations}
-            />
-          )}
+            ))}
+          </div>
         </section>
       </main>
     </div>
