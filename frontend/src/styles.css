@@ -174,10 +174,6 @@ p {
   border-left: 5px solid var(--danger);
 }
 
-.alert-banner strong {
-  display: block;
-  margin-bottom: 0.25rem;
-}
 
 .card-grid {
   display: grid;
@@ -198,6 +194,14 @@ p {
 .info-card h2 {
   margin: 0.4rem 0;
   font-size: 1.8rem;
+  line-height: 1.1;
+}
+
+.card-value-compact {
+  font-size: 1.2rem !important;
+  font-weight: 600;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .dashboard-grid,
@@ -515,3 +519,4 @@ th {
     width: 100%;
   }
 }
+

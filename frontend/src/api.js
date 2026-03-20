@@ -39,39 +39,40 @@ function formatTimestamp(value) {
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    second: '2-digit',
   });
 }
 
 function formatOverviewCards(cards) {
   return cards.map((card) => {
-    if (card.label !== 'Feed Freshness') {
-      return card;
+    if (card.label === 'Feed Freshness') {
+      return {
+        ...card,
+        value: formatTimestamp(card.value),
+      };
     }
-    return {
-      ...card,
-      value: formatTimestamp(card.value),
-    };
+
+    if (card.label === 'Demand Snapshots') {
+      return {
+        ...card,
+        helper: 'Peak and off-peak demand windows',
+      };
+    }
+
+    return card;
   });
 }
 
 function normalizeAlert(alert) {
   if (!alert) {
     return {
-      title: null,
       message: 'No TTC service alerts are currently stored in the system.',
       severity: 'info',
     };
   }
 
-  const title = alert.title?.trim();
-  const message = alert.message?.trim() ?? '';
-  const hideTitle = !title || message.toLowerCase().startsWith(title.toLowerCase());
-
   return {
     ...alert,
-    title: hideTitle ? null : title,
-    message,
+    message: alert.message?.trim() ?? '',
   };
 }
 
