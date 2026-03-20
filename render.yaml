@@ -1,0 +1,57 @@
+services:
+  - type: web
+    name: ttc-transit-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: APP_NAME
+        value: TTC Transit API
+      - key: ENVIRONMENT
+        value: production
+      - key: API_PREFIX
+        value: /api
+      - key: DATABASE_URL
+        sync: false
+
+  - type: worker
+    name: ttc-transit-worker
+    runtime: python
+    rootDir: worker
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m app.main daemon
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: GTFS_RT_VEHICLE_URL
+        value: https://bustime.ttc.ca/gtfsrt/vehicles
+      - key: GTFS_RT_TRIP_URL
+        value: https://bustime.ttc.ca/gtfsrt/trips
+      - key: GTFS_RT_ALERT_URL
+        value: https://bustime.ttc.ca/gtfsrt/alerts
+      - key: STATIC_GTFS_URL
+        value: https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/7795b45e-e65a-4465-81fc-c36b9dfff169/resource/cfb6b2b8-6191-41e3-bda1-b175c51148cb/download/TTC%20Routes%20and%20Schedules%20Data.zip
+      - key: POLL_INTERVAL_SECONDS
+        value: 30
+      - key: DATABASE_URL
+        sync: false
+
+  - type: cron
+    name: ttc-transit-static-refresh
+    runtime: python
+    rootDir: worker
+    schedule: "0 5 * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m app.main static
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: STATIC_GTFS_URL
+        value: https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/7795b45e-e65a-4465-81fc-c36b9dfff169/resource/cfb6b2b8-6191-41e3-bda1-b175c51148cb/download/TTC%20Routes%20and%20Schedules%20Data.zip
+      - key: DATABASE_URL
+        sync: false
