@@ -441,10 +441,10 @@ p {
 }
 
 .vertical-line-node.terminal {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   background: currentColor;
-  border: 4px solid #ffffff;
+  border: 5px solid #ffffff;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18);
 }
 
@@ -455,14 +455,14 @@ p {
 }
 
 .vertical-line-name {
-  font-size: 0.98rem;
+  font-size: 1.02rem;
   font-weight: 700;
   line-height: 1.12;
   color: var(--text);
 }
 
 .vertical-line-name.terminal {
-  font-size: 1.08rem;
+  font-size: 1.18rem;
   font-weight: 800;
 }
 

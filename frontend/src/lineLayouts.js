@@ -34,7 +34,7 @@ export const RAPID_LINE_LAYOUTS = {
       station('St Patrick'),
       station('Osgoode'),
       station('St Andrew'),
-      station('Union', { interchanges: ['GO', 'UP'] }),
+      station('Union', { aliases: ['Union Station'], interchanges: ['GO', 'UP'] }),
       station('King'),
       station('Queen'),
       station('TMU', { aliases: ['Dundas'] }),
@@ -136,3 +136,4 @@ export const RAPID_LINE_LAYOUTS = {
     ],
   },
 };
+
