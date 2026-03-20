@@ -22,6 +22,13 @@ function normalizeStationName(value) {
 }
 
 function resolveStation(layoutStation, apiStations) {
+  if (layoutStation.stationId) {
+    const explicitMatch = apiStations.find((station) => station.id === layoutStation.stationId);
+    if (explicitMatch) {
+      return explicitMatch;
+    }
+  }
+
   const candidates = [layoutStation.label, layoutStation.displayName, ...(layoutStation.aliases ?? [])];
   for (const candidate of candidates) {
     const normalizedCandidate = normalizeStationName(candidate);
@@ -38,7 +45,7 @@ function enrichStations(layoutStations, apiStations) {
     const matched = resolveStation(layoutStation, apiStations);
     return {
       ...layoutStation,
-      id: matched?.id ?? null,
+      id: matched?.id ?? layoutStation.stationId ?? null,
       apiName: matched?.name ?? null,
     };
   });
@@ -74,10 +81,10 @@ function isTerminalStation(routeId, stationLabel) {
   return TERMINAL_STATIONS[routeId]?.has(stationLabel) ?? false;
 }
 
-function VerticalLineColumn({ routeId, colorClass, stations, showTopRail, showBottomRail }) {
+function VerticalLineColumn({ routeId, colorClass, stations, showTopRail, showBottomRail, railMode = 'default' }) {
   return (
-    <div className="vertical-line-column">
-      <div className={`vertical-line-rail ${colorClass} ${showTopRail ? 'show-top' : ''} ${showBottomRail ? 'show-bottom' : ''}`} aria-hidden="true" />
+    <div className={`vertical-line-column ${railMode === 'line-one-return' ? 'line-one-return-column' : ''}`}>
+      <div className={`vertical-line-rail ${colorClass} ${showTopRail ? 'show-top' : ''} ${showBottomRail ? 'show-bottom' : ''} ${railMode}`} aria-hidden="true" />
       <div className="vertical-line-stations">
         {stations.map((station) => {
           const isTerminal = isTerminalStation(routeId, station.label);
@@ -182,6 +189,7 @@ export default function RapidLinesPage() {
                 stations={column.stations}
                 showTopRail={index > 0 && routeId !== '1'}
                 showBottomRail={index < stationColumns.length - 1 && routeId !== '1'}
+                railMode={routeId === '1' && index === 1 ? 'line-one-return' : 'default'}
               />
             ))}
           </div>
