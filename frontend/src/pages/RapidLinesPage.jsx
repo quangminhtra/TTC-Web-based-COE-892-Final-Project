@@ -5,6 +5,13 @@ import TopNav from '../components/TopNav';
 import { loadLineStations, loadRapidLines } from '../api';
 import { RAPID_LINE_LAYOUTS } from '../lineLayouts';
 
+const TERMINAL_STATIONS = {
+  '1': new Set(['Vaughan Metropolitan Centre', 'Finch', 'Union']),
+  '2': new Set(['Kipling', 'Kennedy']),
+  '4': new Set(['Sheppard-Yonge', 'Don Mills']),
+  '5': new Set(['Mount Dennis', 'Kennedy']),
+};
+
 function normalizeStationName(value) {
   return value
     .toLowerCase()
@@ -41,29 +48,39 @@ function splitStationsForLayout(routeId, stations) {
   if (routeId === '1') {
     const unionIndex = stations.findIndex((station) => station.label === 'Union');
     if (unionIndex > 0) {
-      return [stations.slice(0, unionIndex + 1), stations.slice(unionIndex).reverse()];
+      return [
+        { key: 'west', stations: stations.slice(0, unionIndex + 1) },
+        { key: 'east', stations: stations.slice(unionIndex).reverse() },
+      ];
     }
   }
 
   if (routeId === '2' || routeId === '5') {
     const midpoint = Math.ceil(stations.length / 2);
-    return [stations.slice(0, midpoint), stations.slice(midpoint)];
+    return [
+      { key: 'first', stations: stations.slice(0, midpoint) },
+      { key: 'second', stations: stations.slice(midpoint) },
+    ];
   }
 
-  return [stations];
+  return [{ key: 'single', stations }];
 }
 
 function formatStationDisplay(name) {
   return name.replace(/\s+-\s+/g, ' - ');
 }
 
-function VerticalLineColumn({ routeId, routeName, colorClass, stations }) {
+function isTerminalStation(routeId, stationLabel) {
+  return TERMINAL_STATIONS[routeId]?.has(stationLabel) ?? false;
+}
+
+function VerticalLineColumn({ routeId, colorClass, stations, showTopRail, showBottomRail }) {
   return (
     <div className="vertical-line-column">
-      <div className={`vertical-line-rail ${colorClass}`} aria-hidden="true" />
+      <div className={`vertical-line-rail ${colorClass} ${showTopRail ? 'show-top' : ''} ${showBottomRail ? 'show-bottom' : ''}`} aria-hidden="true" />
       <div className="vertical-line-stations">
-        {stations.map((station, index) => {
-          const isTerminal = index === 0 || index === stations.length - 1;
+        {stations.map((station) => {
+          const isTerminal = isTerminalStation(routeId, station.label);
           const isInterchange = station.interchanges.length > 0;
           const content = (
             <>
@@ -88,7 +105,6 @@ function VerticalLineColumn({ routeId, routeName, colorClass, stations }) {
           );
         })}
       </div>
-      <div className="vertical-line-caption">{routeName}</div>
     </div>
   );
 }
@@ -160,11 +176,12 @@ export default function RapidLinesPage() {
           <div className={`vertical-line-grid ${gridClass}`}>
             {stationColumns.map((column, index) => (
               <VerticalLineColumn
-                key={`${routeId}-${index}`}
+                key={`${routeId}-${column.key}`}
                 routeId={routeId}
-                routeName={stationColumns.length > 1 ? `${lineName} ${index + 1}` : lineName}
                 colorClass={lineColorClass}
-                stations={column}
+                stations={column.stations}
+                showTopRail={index > 0 && routeId !== '1'}
+                showBottomRail={index < stationColumns.length - 1 && routeId !== '1'}
               />
             ))}
           </div>
