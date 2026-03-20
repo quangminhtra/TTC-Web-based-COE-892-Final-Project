@@ -50,67 +50,71 @@ export default function StationDetailPage() {
             </section>
 
             <div className="detail-grid">
-              <section className="panel">
-                <div className="panel-heading">
-                  <h2>Line Status</h2>
-                </div>
-                <div className="line-list">
-                  {detail.lineStatuses.map((status) => (
-                    <article className="line-card" key={status.route_id}>
-                      <div className={`line-badge ${status.colorClass}`} aria-hidden="true" />
-                      <div>
-                        <h3>{status.route_name}</h3>
-                        <p className="muted">{status.mode === 'streetcar' ? 'LRT line case' : 'Subway line'}</p>
-                      </div>
-                      <span className={`status-chip ${status.status.toLowerCase()}`}>{status.statusLabel}</span>
-                    </article>
-                  ))}
-                </div>
-              </section>
-
-              <section className="panel">
-                <div className="panel-heading">
-                  <h2>Connected Bus / Streetcar Routes</h2>
-                </div>
-                <div className="connected-route-list">
-                  {detail.connectedRoutes.length > 0 ? detail.connectedRoutes.map((route) => (
-                    <article className="connected-route-item" key={`${route.route_id}-${route.mode}`}>
-                      <strong>{route.route_id}</strong>
-                      <span>{route.route_name}</span>
-                      <span className="muted">{route.mode}</span>
-                    </article>
-                  )) : <p className="muted">No connected routes were found for this station in the imported GTFS data.</p>}
-                </div>
-              </section>
-            </div>
-
-            <section className="panel">
-              <div className="panel-heading">
-                <h2>Scheduled Subway Arrivals</h2>
-              </div>
-              <div className="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Destination</th>
-                      <th>Route</th>
-                      <th>Arrival</th>
-                      <th>Source</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detail.arrivals.map((arrival, index) => (
-                      <tr key={`${arrival.route_id}-${index}`}>
-                        <td>{arrival.destination}</td>
-                        <td>{arrival.route_name}</td>
-                        <td>{arrival.timeLabel}</td>
-                        <td><span className="arrival-label">Scheduled estimate</span></td>
-                      </tr>
+              <div className="left-column">
+                <section className="panel">
+                  <div className="panel-heading">
+                    <h2>Line Status</h2>
+                  </div>
+                  <div className="line-list">
+                    {detail.lineStatuses.map((status) => (
+                      <article className="line-card" key={status.route_id}>
+                        <div className={`line-badge ${status.colorClass}`} aria-hidden="true" />
+                        <div>
+                          <h3>{status.route_name}</h3>
+                          <p className="muted">{status.mode === 'streetcar' ? 'LRT line case' : 'Subway line'}</p>
+                        </div>
+                        <span className={`status-chip ${status.status.toLowerCase()}`}>{status.statusLabel}</span>
+                      </article>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </section>
+
+                <section className="panel">
+                  <div className="panel-heading">
+                    <h2>Connected Bus / Streetcar Routes</h2>
+                  </div>
+                  <div className="connected-route-list">
+                    {detail.connectedRoutes.length > 0 ? detail.connectedRoutes.map((route) => (
+                      <article className="connected-route-item" key={`${route.route_id}-${route.mode}`}>
+                        <strong>{route.route_id}</strong>
+                        <span>{route.route_name}</span>
+                        <span className="muted">{route.mode}</span>
+                      </article>
+                    )) : <p className="muted">No connected routes were found near this station.</p>}
+                  </div>
+                </section>
               </div>
-            </section>
+
+              <div className="right-column">
+                <section className="panel">
+                  <div className="panel-heading">
+                    <h2>Scheduled Subway Arrivals</h2>
+                  </div>
+                  <div className="table-wrapper">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Destination</th>
+                          <th>Route</th>
+                          <th>Arrival</th>
+                          <th>Source</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detail.arrivals.map((arrival, index) => (
+                          <tr key={`${arrival.route_id}-${index}`}>
+                            <td>{arrival.destination}</td>
+                            <td>{arrival.route_name}</td>
+                            <td>{arrival.timeLabel}</td>
+                            <td><span className="arrival-label">Scheduled estimate</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+            </div>
           </>
         ) : null}
       </main>
