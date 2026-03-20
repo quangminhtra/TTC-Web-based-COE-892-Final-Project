@@ -236,12 +236,13 @@ def fetch_line_stations(route_id: str) -> LineStationsResponse:
         representative_stations AS (
             SELECT
                 COALESCE(platform.parent_station, platform.stop_id) AS station_id,
-                MIN(platform.stop_name) AS station_name,
+                COALESCE(parent.stop_name, MIN(platform.stop_name)) AS station_name,
                 MIN(scheduled_stop_times.stop_sequence) AS sequence
             FROM scheduled_stop_times
             JOIN representative_trip ON representative_trip.trip_id = scheduled_stop_times.trip_id
             JOIN stops AS platform ON platform.stop_id = scheduled_stop_times.stop_id
-            GROUP BY COALESCE(platform.parent_station, platform.stop_id)
+            LEFT JOIN stops AS parent ON parent.stop_id = platform.parent_station
+            GROUP BY COALESCE(platform.parent_station, platform.stop_id), parent.stop_name
         ),
         station_routes AS (
             SELECT
@@ -299,7 +300,9 @@ def fetch_station_detail(station_id: str) -> StationDetailResponse:
         )
         SELECT
             COALESCE(parent.stop_name, station.stop_name) AS station_name,
-            COALESCE(parent.stop_id, station.stop_id) AS resolved_station_id
+            COALESCE(parent.stop_id, station.stop_id) AS resolved_station_id,
+            COALESCE(parent.latitude, station.latitude) AS latitude,
+            COALESCE(parent.longitude, station.longitude) AS longitude
         FROM station_nodes station
         LEFT JOIN stops parent ON parent.stop_id = station.parent_station
         LIMIT 1
@@ -325,21 +328,32 @@ def fetch_station_detail(station_id: str) -> StationDetailResponse:
         ORDER BY routes.route_id
     """
     connected_routes_query = """
-        WITH station_nodes AS (
-            SELECT stop_id
-            FROM stops
-            WHERE stop_id = %(station_id)s OR parent_station = %(station_id)s
+        WITH anchor AS (
+            SELECT %(latitude)s::DOUBLE PRECISION AS latitude, %(longitude)s::DOUBLE PRECISION AS longitude
+        ),
+        nearby_surface_stops AS (
+            SELECT s.stop_id
+            FROM stops s, anchor a
+            WHERE s.latitude IS NOT NULL
+              AND s.longitude IS NOT NULL
+              AND s.mode IN ('bus', 'streetcar')
+              AND 6371000 * acos(
+                    LEAST(1.0, GREATEST(-1.0,
+                        cos(radians(a.latitude)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(a.longitude)) +
+                        sin(radians(a.latitude)) * sin(radians(s.latitude))
+                    ))
+                  ) <= 500
         ),
         static_routes AS (
             SELECT DISTINCT trips.route_id
             FROM scheduled_stop_times
             JOIN trips ON trips.trip_id = scheduled_stop_times.trip_id
-            WHERE scheduled_stop_times.stop_id IN (SELECT stop_id FROM station_nodes)
+            WHERE scheduled_stop_times.stop_id IN (SELECT stop_id FROM nearby_surface_stops)
         ),
         live_routes AS (
             SELECT DISTINCT stop_time_updates.route_id
             FROM stop_time_updates
-            WHERE stop_time_updates.stop_id IN (SELECT stop_id FROM station_nodes)
+            WHERE stop_time_updates.stop_id IN (SELECT stop_id FROM nearby_surface_stops)
         ),
         union_routes AS (
             SELECT route_id FROM static_routes
@@ -367,8 +381,18 @@ def fetch_station_detail(station_id: str) -> StationDetailResponse:
             station = cursor.fetchone()
             cursor.execute(rapid_status_query, {"station_id": station_id, "route_ids": list(RAPID_ROUTE_IDS)})
             statuses = cursor.fetchall()
-            cursor.execute(connected_routes_query, {"station_id": station_id, "rapid_route_ids": list(RAPID_ROUTE_IDS)})
-            connected = cursor.fetchall()
+            if station and station["latitude"] is not None and station["longitude"] is not None:
+                cursor.execute(
+                    connected_routes_query,
+                    {
+                        "latitude": station["latitude"],
+                        "longitude": station["longitude"],
+                        "rapid_route_ids": list(RAPID_ROUTE_IDS),
+                    },
+                )
+                connected = cursor.fetchall()
+            else:
+                connected = []
 
     line_statuses = [
         StationRouteStatus(
