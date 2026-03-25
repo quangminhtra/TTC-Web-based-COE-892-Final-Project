@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import TopNav from '../components/TopNav';
 import AlertBanner from '../components/AlertBanner';
 import OverviewCards from '../components/OverviewCards';
+import DashboardAnalytics from '../components/DashboardAnalytics';
 import LineStatus from '../components/LineStatus';
 import StationList from '../components/StationList';
 import ArrivalBoard from '../components/ArrivalBoard';
@@ -17,6 +18,7 @@ const initialState = {
   arrivals: [],
   arrivalsTitle: 'Loading',
   demandSummary: [],
+  analytics: { summary: [], topDelays: [] },
   lastUpdated: null,
   cacheState: null,
 };
@@ -97,6 +99,7 @@ export default function DashboardPage() {
         {error ? <p className="panel status-message error-message">{error}</p> : null}
         <AlertBanner alert={dashboard.alert} />
         <OverviewCards cards={dashboard.overviewCards} />
+        <DashboardAnalytics analytics={dashboard.analytics} />
 
         <div className="dashboard-grid">
           <div className="left-column">

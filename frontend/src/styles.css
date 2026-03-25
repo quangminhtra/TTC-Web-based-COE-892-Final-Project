@@ -519,7 +519,9 @@ th {
   .card-grid,
   .dashboard-grid,
   .detail-grid,
-  .two-column-line-grid {
+  .two-column-line-grid,
+  .analytics-grid,
+  .analytics-summary-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -543,8 +545,15 @@ th {
   .dashboard-grid,
   .detail-grid,
   .two-column-line-grid,
-  .single-column-line-grid {
+  .single-column-line-grid,
+  .analytics-grid,
+  .analytics-summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .analytics-delay-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .station-meta {
@@ -557,4 +566,54 @@ th {
   }
 }
 
+
+.analytics-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1rem;
+}
+
+.analytics-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.analytics-card,
+.analytics-delay-panel {
+  border: 1px solid var(--border);
+  background: var(--panel-soft);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.analytics-card h3,
+.analytics-delay-panel h3 {
+  margin: 0.35rem 0 0.4rem;
+  font-size: 1.35rem;
+}
+
+.analytics-delay-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.analytics-delay-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.analytics-delay-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
 

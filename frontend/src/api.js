@@ -213,6 +213,37 @@ function transformDashboardPayload(overview, alerts, demand, nearbyStops, routeS
   };
 }
 
+function buildDashboardAnalytics(lines, demandSummary, delays) {
+  const delayedRoutes = lines.filter((line) => line.status.toLowerCase() === 'delayed').length;
+  const liveRoutes = lines.filter((line) => line.source === 'Live TTC feed').length;
+  const highestDemand = demandSummary.find((item) => item.passengers === 'High') ?? demandSummary[0] ?? null;
+
+  return {
+    summary: [
+      {
+        label: 'Routes With Alerts',
+        value: String(delayedRoutes),
+        helper: 'Rapid lines currently marked delayed',
+      },
+      {
+        label: 'Live Route Feeds',
+        value: String(liveRoutes),
+        helper: 'Routes backed by GTFS-RT updates',
+      },
+      {
+        label: 'Highest Demand Window',
+        value: highestDemand ? highestDemand.period : 'Unavailable',
+        helper: highestDemand ? highestDemand.passengers : 'No demand data',
+      },
+    ],
+    topDelays: delays.slice(0, 5).map((delay) => ({
+      routeId: delay.route_id,
+      routeName: delay.route_name,
+      delayMinutes: Number(delay.average_delay_minutes ?? 0).toFixed(1),
+    })),
+  };
+}
+
 export function getCachedDashboardData(location = DEFAULT_LOCATION) {
   const cached = readCache('dashboard', dashboardCacheKey(location), DASHBOARD_CACHE_TTL_MS);
   return cached ? markCachedPayload(cached.data, cached) : null;
@@ -238,16 +269,18 @@ export async function loadDashboardData(location = DEFAULT_LOCATION) {
   const cached = readCache('dashboard', cacheKey, DASHBOARD_CACHE_TTL_MS);
 
   try {
-    const [overview, alerts, demand, nearbyStops, routeStatuses] = await Promise.all([
+    const [overview, alerts, demand, nearbyStops, routeStatuses, delays] = await Promise.all([
       fetchJson('/overview'),
       fetchJson('/alerts'),
       fetchJson('/analytics/demand'),
       fetchJson(`/stops/nearby?lat=${location.lat}&lon=${location.lon}`),
       Promise.all(ROUTE_IDS.map((routeId) => fetchJson(`/routes/${routeId}/status`))),
+      fetchJson('/analytics/delays'),
     ]);
 
     const payloadBuilder = transformDashboardPayload(overview, alerts, demand, nearbyStops, routeStatuses);
     const payload = await payloadBuilder((path) => fetchJson(path));
+    payload.analytics = buildDashboardAnalytics(payload.lines, payload.demandSummary, delays.delays ?? []);
     writeCache('dashboard', cacheKey, payload);
     return payload;
   } catch (error) {
