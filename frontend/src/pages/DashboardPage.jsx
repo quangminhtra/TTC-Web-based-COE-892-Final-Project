@@ -7,7 +7,7 @@ import LineStatus from '../components/LineStatus';
 import StationList from '../components/StationList';
 import ArrivalBoard from '../components/ArrivalBoard';
 import DemandPanel from '../components/DemandPanel';
-import { DEFAULT_LOCATION, loadDashboardData } from '../api';
+import { DEFAULT_LOCATION, getCachedDashboardData, loadDashboardData } from '../api';
 
 const initialState = {
   alert: { title: 'Loading TTC data', message: 'Fetching backend dashboard data.', severity: 'info' },
@@ -18,11 +18,28 @@ const initialState = {
   arrivalsTitle: 'Loading',
   demandSummary: [],
   lastUpdated: null,
+  cacheState: null,
 };
 
+const cachedInitialState = getCachedDashboardData(DEFAULT_LOCATION) ?? initialState;
+
+function withCacheNotice(dashboard) {
+  if (!dashboard?.cacheState) {
+    return dashboard;
+  }
+
+  return {
+    ...dashboard,
+    alert: {
+      message: 'Showing cached TTC data while the backend wakes up. Information may be stale.',
+      severity: 'info',
+    },
+  };
+}
+
 export default function DashboardPage() {
-  const [dashboard, setDashboard] = useState(initialState);
-  const [loading, setLoading] = useState(true);
+  const [dashboard, setDashboard] = useState(withCacheNotice(cachedInitialState));
+  const [loading, setLoading] = useState(!cachedInitialState?.cacheState && cachedInitialState === initialState);
   const [error, setError] = useState('');
   const [location, setLocation] = useState(DEFAULT_LOCATION);
 
@@ -31,7 +48,7 @@ export default function DashboardPage() {
     setError('');
     try {
       const nextDashboard = await loadDashboardData(currentLocation);
-      setDashboard(nextDashboard);
+      setDashboard(withCacheNotice(nextDashboard));
     } catch (refreshError) {
       setError(refreshError.message || 'Failed to load dashboard data.');
     } finally {
@@ -51,6 +68,13 @@ export default function DashboardPage() {
           lat: position.coords.latitude,
           lon: position.coords.longitude,
         };
+
+        const cachedForLocation = getCachedDashboardData(nextLocation);
+        if (cachedForLocation) {
+          setDashboard(withCacheNotice(cachedForLocation));
+          setLoading(false);
+        }
+
         setLocation(nextLocation);
         refreshDashboard(nextLocation);
       },

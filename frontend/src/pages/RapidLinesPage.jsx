@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import TopNav from '../components/TopNav';
-import { loadLineStations, loadRapidLines } from '../api';
+import { getCachedLineStations, getCachedRapidLines, loadLineStations, loadRapidLines } from '../api';
 import { RAPID_LINE_LAYOUTS } from '../lineLayouts';
 
 const TERMINAL_STATIONS = {
@@ -118,9 +118,12 @@ function VerticalLineColumn({ routeId, colorClass, stations, showTopRail, showBo
 
 export default function RapidLinesPage() {
   const { routeId = '1' } = useParams();
-  const [lines, setLines] = useState([]);
-  const [lineData, setLineData] = useState({ routeId: '1', routeName: '', stations: [], colorClass: 'line-yellow', mode: 'subway' });
-  const [loading, setLoading] = useState(true);
+  const cachedLines = getCachedRapidLines() ?? [];
+  const cachedLineData = getCachedLineStations(routeId) ?? { routeId: '1', routeName: '', stations: [], colorClass: 'line-yellow', mode: 'subway' };
+
+  const [lines, setLines] = useState(cachedLines);
+  const [lineData, setLineData] = useState(cachedLineData);
+  const [loading, setLoading] = useState(!(cachedLines.length > 0 || cachedLineData.stations.length > 0));
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -136,6 +139,12 @@ export default function RapidLinesPage() {
       } finally {
         setLoading(false);
       }
+    }
+
+    const nextCachedLineData = getCachedLineStations(routeId);
+    if (nextCachedLineData) {
+      setLineData(nextCachedLineData);
+      setLoading(false);
     }
 
     loadPage();

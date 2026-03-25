@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import TopNav from '../components/TopNav';
-import { lineColorClass, loadStationDetail } from '../api';
+import { getCachedStationDetail, loadStationDetail } from '../api';
 
 export default function StationDetailPage() {
   const { stationId = '' } = useParams();
-  const [detail, setDetail] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const cachedDetail = getCachedStationDetail(stationId);
+
+  const [detail, setDetail] = useState(cachedDetail);
+  const [loading, setLoading] = useState(!cachedDetail);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -22,6 +24,12 @@ export default function StationDetailPage() {
       } finally {
         setLoading(false);
       }
+    }
+
+    const nextCachedDetail = getCachedStationDetail(stationId);
+    if (nextCachedDetail) {
+      setDetail(nextCachedDetail);
+      setLoading(false);
     }
 
     loadPage();
