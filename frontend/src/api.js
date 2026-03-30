@@ -222,12 +222,12 @@ function buildDashboardAnalytics(lines, demandSummary, delays) {
   return {
     summary: [
       {
-        label: 'Routes With Alerts',
+        label: 'Rapid Lines With Route Alerts',
         value: String(delayedRoutes),
         helper: 'Rapid lines currently marked delayed',
       },
       {
-        label: 'Live Route Feeds',
+        label: 'Rapid Lines Using Live Feed',
         value: String(liveRoutes),
         helper: 'Routes backed by GTFS-RT updates',
       },
@@ -375,5 +375,6 @@ export async function loadStationDetail(stationId) {
 }
 
 export { API_BASE_URL, DEFAULT_LOCATION, ROUTE_IDS, lineColorClass };
+
 
 
