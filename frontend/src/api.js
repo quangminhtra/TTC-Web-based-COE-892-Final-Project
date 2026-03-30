@@ -26,6 +26,7 @@ function getCacheKey(scope, key) {
   return `${CACHE_PREFIX}:${scope}:${key}`;
 }
 
+// Cache the last successful API payload per view so the UI can render immediately while the backend wakes up.
 function readCache(scope, key, ttlMs) {
   if (!storageAvailable()) {
     return null;
@@ -374,3 +375,4 @@ export async function loadStationDetail(stationId) {
 }
 
 export { API_BASE_URL, DEFAULT_LOCATION, ROUTE_IDS, lineColorClass };
+

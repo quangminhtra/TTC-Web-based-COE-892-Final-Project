@@ -94,7 +94,7 @@ Deployment flow:
 
 1. Push the repository to GitHub.
 2. In Render, create a new Blueprint and point it to the repository.
-3. Use branch `codex/deployment-new` or your chosen deployment branch.
+3. Use your active deployment branch when creating the Render blueprint.
 4. Render will detect `render.yaml` and create the backend service.
 5. Set `DATABASE_URL` in Render to the Supabase session-pooler connection string.
 6. Deploy the backend service.
@@ -132,3 +132,4 @@ Operational note:
 - Frontend dashboard and subway-line views are connected to the backend.
 - Backend reads live and scheduled data from Supabase.
 - Worker ingests TTC GTFS-RT data, imports static GTFS data, and generates subway schedule estimates.
+

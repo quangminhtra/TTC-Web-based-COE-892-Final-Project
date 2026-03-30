@@ -189,30 +189,25 @@ def upsert_vehicle_positions(vehicles: list[dict[str, Any]]) -> int:
     return len(payload)
 
 
-def upsert_stop_time_updates(stop_updates: list[dict[str, Any]]) -> int:
-    if not stop_updates:
-        return 0
-
-    query = """
-        INSERT INTO stop_time_updates (
-            trip_id, stop_id, route_id, vehicle_id, stop_sequence,
-            arrival_time, departure_time, schedule_relationship, updated_at
-        )
-        VALUES (
-            %(trip_id)s, %(stop_id)s, %(route_id)s, %(vehicle_id)s, %(stop_sequence)s,
-            %(arrival_time)s, %(departure_time)s, %(schedule_relationship)s, %(updated_at)s
-        )
-        ON CONFLICT (trip_id, stop_id, stop_sequence) DO UPDATE SET
-            route_id = EXCLUDED.route_id,
-            vehicle_id = EXCLUDED.vehicle_id,
-            arrival_time = EXCLUDED.arrival_time,
-            departure_time = EXCLUDED.departure_time,
-            schedule_relationship = EXCLUDED.schedule_relationship,
-            updated_at = EXCLUDED.updated_at
-    """
+def replace_stop_time_updates(stop_updates: list[dict[str, Any]]) -> int:
+    # GTFS-RT stop time updates are a rolling snapshot, not long-term history.
+    # Replacing the table each ingest keeps arrivals fresh and prevents bloat.
     payload = [{**row, "updated_at": utc_now()} for row in stop_updates if row.get("stop_id")]
     with get_connection() as connection:
         with connection.cursor() as cursor:
+            cursor.execute("TRUNCATE TABLE stop_time_updates")
+            if not payload:
+                return 0
+            query = """
+                INSERT INTO stop_time_updates (
+                    trip_id, stop_id, route_id, vehicle_id, stop_sequence,
+                    arrival_time, departure_time, schedule_relationship, updated_at
+                )
+                VALUES (
+                    %(trip_id)s, %(stop_id)s, %(route_id)s, %(vehicle_id)s, %(stop_sequence)s,
+                    %(arrival_time)s, %(departure_time)s, %(schedule_relationship)s, %(updated_at)s
+                )
+            """
             cursor.executemany(query, payload)
     return len(payload)
 
@@ -288,3 +283,4 @@ def _upsert_feed_status(feed_name: str, entity_count: int, last_error: str | Non
     with get_connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(query, payload)
+

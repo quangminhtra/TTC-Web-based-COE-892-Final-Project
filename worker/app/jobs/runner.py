@@ -12,8 +12,8 @@ from app.storage import (
     mark_feed_success,
     replace_alerts,
     replace_demand_snapshots,
+    replace_stop_time_updates,
     upsert_routes,
-    upsert_stop_time_updates,
     upsert_vehicle_positions,
 )
 
@@ -32,7 +32,8 @@ def run_once() -> dict[str, object]:
     counts = {
         "routes": upsert_routes(routes),
         "vehicles": upsert_vehicle_positions(vehicles),
-        "stop_updates": upsert_stop_time_updates(stop_updates),
+        # Refresh the live stop-time snapshot each run so the arrivals table stays bounded.
+        "stop_updates": replace_stop_time_updates(stop_updates),
         "alerts": replace_alerts(alerts),
         "demand_snapshots": replace_demand_snapshots(demand),
         "subway_schedule_estimates": refresh_subway_schedule_estimates(),
@@ -65,3 +66,4 @@ def run_forever_safe() -> None:
         except Exception as exc:
             print(f"[{started_at}] ingest failed: {exc}", flush=True)
         time.sleep(interval)
+
