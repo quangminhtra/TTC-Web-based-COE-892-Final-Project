@@ -252,7 +252,7 @@ export function getCachedDashboardData(location = DEFAULT_LOCATION) {
 
 export function getCachedRapidLines() {
   const cached = readCache('rapid-lines', 'all', LINE_CACHE_TTL_MS);
-  return cached ? markCachedPayload(cached.data, cached) : null;
+  return cached ? cached.data : null;
 }
 
 export function getCachedLineStations(routeId) {
@@ -375,4 +375,5 @@ export async function loadStationDetail(stationId) {
 }
 
 export { API_BASE_URL, DEFAULT_LOCATION, ROUTE_IDS, lineColorClass };
+
 
