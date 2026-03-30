@@ -2,6 +2,10 @@ export default function DashboardAnalytics({ analytics }) {
   const summary = analytics?.summary ?? [];
   const topDelays = analytics?.topDelays ?? [];
 
+  if (summary.length === 0 && topDelays.length === 0) {
+    return null;
+  }
+
   return (
     <section className="panel analytics-panel">
       <div className="panel-heading">

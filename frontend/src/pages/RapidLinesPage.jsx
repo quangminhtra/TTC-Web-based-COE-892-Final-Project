@@ -206,7 +206,6 @@ export default function RapidLinesPage() {
           <div className="panel-heading">
             <div>
               <h2>Rapid Transit Lines</h2>
-              <p className="muted">Curated station layouts with corrected terminals and explicit interchange markers.</p>
             </div>
           </div>
           <div className="line-selector">
@@ -223,7 +222,6 @@ export default function RapidLinesPage() {
           <div className="panel-heading">
             <div>
               <h2>{lineName}</h2>
-              <p className="muted">Accessible vertical layout with curated station order.</p>
             </div>
           </div>
 
