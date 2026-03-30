@@ -67,3 +67,12 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Python artifacts
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
+
+# Frontend build output
+frontend/dist/

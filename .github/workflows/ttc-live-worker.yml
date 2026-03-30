@@ -1,0 +1,39 @@
+name: TTC Live Worker
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ttc-live-worker
+  cancel-in-progress: false
+
+jobs:
+  ingest-live-data:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    env:
+      ENVIRONMENT: production
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      GTFS_RT_VEHICLE_URL: https://bustime.ttc.ca/gtfsrt/vehicles
+      GTFS_RT_TRIP_URL: https://bustime.ttc.ca/gtfsrt/trips
+      GTFS_RT_ALERT_URL: https://bustime.ttc.ca/gtfsrt/alerts
+      STATIC_GTFS_URL: https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/7795b45e-e65a-4465-81fc-c36b9dfff169/resource/cfb6b2b8-6191-41e3-bda1-b175c51148cb/download/TTC%20Routes%20and%20Schedules%20Data.zip
+      POLL_INTERVAL_SECONDS: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run live ingest
+        run: python -m app.main live
