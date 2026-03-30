@@ -51,6 +51,52 @@ function enrichStations(layoutStations, apiStations) {
   });
 }
 
+function formatStationDisplay(name) {
+  return name.replace(/\s+-\s+/g, ' - ');
+}
+
+function isTerminalStation(routeId, stationLabel) {
+  return TERMINAL_STATIONS[routeId]?.has(stationLabel) ?? false;
+}
+
+function getStationVisualWeight(routeId, station) {
+  let weight = 1;
+
+  const isTerminal = isTerminalStation(routeId, station.label);
+  const isInterchange = station.interchanges.length > 0;
+  const hasLongName = station.displayName.length > 18;
+
+  if (isTerminal) weight += 0.9;
+  if (isInterchange) weight += 0.45;
+  if (hasLongName) weight += 0.2;
+
+  return weight;
+}
+
+function findBalancedSplitIndex(routeId, stations) {
+  if (stations.length < 2) return 1;
+
+  const weights = stations.map((station) => getStationVisualWeight(routeId, station));
+  const totalWeight = weights.reduce((sum, value) => sum + value, 0);
+
+  let leftWeight = 0;
+  let bestIndex = 1;
+  let bestDifference = Number.POSITIVE_INFINITY;
+
+  for (let i = 1; i < stations.length; i += 1) {
+    leftWeight += weights[i - 1];
+    const rightWeight = totalWeight - leftWeight;
+    const difference = Math.abs(leftWeight - rightWeight);
+
+    if (difference < bestDifference) {
+      bestDifference = difference;
+      bestIndex = i;
+    }
+  }
+
+  return bestIndex;
+}
+
 function splitStationsForLayout(routeId, stations) {
   if (routeId === '1') {
     const unionIndex = stations.findIndex((station) => station.label === 'Union');
@@ -63,22 +109,14 @@ function splitStationsForLayout(routeId, stations) {
   }
 
   if (routeId === '2' || routeId === '5') {
-    const midpoint = Math.ceil(stations.length / 2);
+    const splitIndex = findBalancedSplitIndex(routeId, stations);
     return [
-      { key: 'first', stations: stations.slice(0, midpoint) },
-      { key: 'second', stations: stations.slice(midpoint) },
+      { key: 'first', stations: stations.slice(0, splitIndex) },
+      { key: 'second', stations: stations.slice(splitIndex) },
     ];
   }
 
   return [{ key: 'single', stations }];
-}
-
-function formatStationDisplay(name) {
-  return name.replace(/\s+-\s+/g, ' - ');
-}
-
-function isTerminalStation(routeId, stationLabel) {
-  return TERMINAL_STATIONS[routeId]?.has(stationLabel) ?? false;
 }
 
 function VerticalLineColumn({ routeId, colorClass, stations, showTopRail, showBottomRail, railMode = 'default' }) {
