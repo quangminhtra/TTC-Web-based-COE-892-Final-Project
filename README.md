@@ -11,9 +11,17 @@ Deployed frontend:
 - `backend/`: FastAPI REST API
 - `worker/`: TTC ingestion and schedule-generation jobs
 - `infra/`: SQL schema and optional local runtime helpers
+- `docs/api/`: API reference documentation
 - `render.yaml`: Render blueprint for the backend web service
 - `.github/workflows/ttc-live-worker.yml`: scheduled live TTC ingest job
 - `.github/workflows/ttc-static-refresh.yml`: scheduled static GTFS refresh job
+
+Detailed component documentation:
+
+- `frontend/README.md`
+- `backend/README.md`
+- `infra/README.md`
+- `docs/api/README.md`
 
 ## Architecture
 
