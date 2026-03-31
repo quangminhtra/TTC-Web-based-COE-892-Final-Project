@@ -113,6 +113,8 @@ DATABASE_URL=postgresql://...
 
 Use the Supabase session-pooler connection string for hosted environments.
 
+If you need the Supabase database password, `DATABASE_URL`, or Render deployment access details, contact `qminh30k3@gmail.com`.
+
 ## Initial Database Setup
 
 Open Supabase SQL Editor and run these files in order:
