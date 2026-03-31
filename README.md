@@ -394,7 +394,7 @@ Check:
 
 ## Minimum Correct Run Sequence
 
-If you only want the shortest valid path:
+If you only want the shortest valid path or just simply test out the stuff:
 
 1. create `.env` files
 2. install frontend, backend, and worker dependencies
